@@ -2,6 +2,8 @@ import os
 import glob
 import pandas as pd
 
+RELEVANT_COLUMS = ["tweet_id", "tweet_date", "full_text", "urls",
+                   "retweet_text", "retweet_urls", "quoted_text", "quote_urls"]
 
 class ReadFile:
     def __init__(self, corpus_path):
@@ -21,7 +23,6 @@ class ReadFile:
 
         return pd.concat(dfs, axis=0)
 
-
     def read_and_concat_all_parquet_in_dir_of_dirs(self, max_files=100):
         """
         This method used to read all parquet files from a directory of directories. The directory
@@ -33,10 +34,11 @@ class ReadFile:
         for dir in os.listdir(self.corpus_path):
             files = glob.glob(f"{self.corpus_path}/{dir}/*.parquet")
             for file in files:
-                dfs.append(pd.read_parquet(file))
+                dfs.append(pd.read_parquet(file, columns=RELEVANT_COLUMS))
                 counter += 1
                 if counter >= max_files:
                     break
             if counter >= max_files:
                 break
         return pd.concat(dfs, axis=0)
+
