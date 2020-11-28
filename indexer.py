@@ -40,13 +40,14 @@ class Indexer:
         """
         file_name = "data/terms_pointers/term_docs_{}.txt"
         for counter, term_docs in enumerate(self.parser_dictionary.items()):
-            temp_file_name = file_name.format(math.floor(counter / self.max_terms_in_file))
+            temp_file_name =  file_name.format(math.floor(counter / self.max_terms_in_file))
             term = term_docs[0]
             docs = term_docs[1]
 
             # append line to file
             temp_docs_locaions = [(doc, self.docs_locations[doc]) for doc in docs]
 
+            # append line to file
             with io.open(temp_file_name, "a", encoding="utf-8") as f:
                 f.write(f"{(len(docs), temp_docs_locaions)},\n")
             f.close()
@@ -57,8 +58,18 @@ class Indexer:
             )
 
 
+    def indexing(self):
+        """
 
+        :return:
+        """
+        # indexing docs
+        self.index_docs()
+        del self.parser_tweets_words_locations
 
+        # indexing terms
+        self.index_terms_and_docs()
+        del self.docs_locations
 
 
     def add_new_doc(self, document):

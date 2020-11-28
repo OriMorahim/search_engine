@@ -29,7 +29,7 @@ class Parse:
         # if stemming is necessary
         if do_stem:
             text_tokens = self.stemmer(text_tokens)
-            print("after stemming:", text_tokens)
+           # print("after stemming:", text_tokens)
 
         text_tokens_without_stopwords = [w for w in text_tokens if w.lower() not in self.stop_words]
 
@@ -44,16 +44,16 @@ class Parse:
         :return: Document object with corresponding fields.
         """
         tweet_id = doc_as_named_tuple.tweet_id
-        tweet_date = doc_as_named_tuple.tweet_date
+        tweet_date = doc_as_named_tuple.tweet_date #
         full_text = doc_as_named_tuple.full_text
-        url = doc_as_named_tuple.urls
-        retweet_text = doc_as_named_tuple.retweet_text
-        retweet_url = doc_as_named_tuple.retweet_urls
-        quote_text = doc_as_named_tuple.quoted_text
-        quote_url = doc_as_named_tuple.quote_urls
+        url = doc_as_named_tuple.urls #
+        retweet_text = doc_as_named_tuple.retweet_text #
+        retweet_url = doc_as_named_tuple.retweet_urls #
+        quote_text = doc_as_named_tuple.quoted_text #
+        #quote_url = doc_as_named_tuple.quote_urls #
         tokenized_text = self.parse_sentence(full_text, do_stem)
-        term_dict = Counter(tokenized_text)
-        doc_length = len(tokenized_text)  # after text operations.
+        #term_dict = Counter(tokenized_text)
+        #doc_length = len(tokenized_text)  # after text operations.
 
         # the following dict will hold the words locations for a specific tweet
         tweet_words_locations = defaultdict(list)
@@ -73,10 +73,10 @@ class Parse:
         :return:
         """
         # parse each tweet and insert result to a document
-        documnets = []
+#        documnets = []
         for row in df.itertuples():
             document = self.parse_doc(row)
-            documnets.append(document)
+            #documnets.append(document)
 
         # fetch words with capital letter
         all_words = set(self.capitals_counter.keys())
@@ -146,12 +146,12 @@ class Parse:
 
 
 
-#from parser_module import Parse
-#parse_ = Parse()
-#from reader import ReadFile
-#reader_ = ReadFile('C:/Users/orimo/Documents/study_bgu/information_retrival/Data')
-#df = reader_.read_and_concat_all_parquet_in_dir_of_dirs(1)
-#parse_.parse_corpus(df.head(100))
-#from indexer import *
-#ind = Indexer()
-#ind.index_docs(parse_.tweets_words_locations)
+# from parser_module import Parse
+# parse_ = Parse()
+# from reader import ReadFile
+# reader_ = ReadFile('C:/Users/orimo/Documents/study_bgu/information_retrival/Data')
+# df = reader_.read_and_concat_all_parquet_in_dir_of_dirs(1)
+# parse_.parse_corpus(df.head(200))
+# from indexer import *
+# ind = Indexer(parse_.dictionary, parse_.tweets_words_locations)
+# ind.index_docs()
