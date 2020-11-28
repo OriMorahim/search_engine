@@ -1,5 +1,6 @@
 import io
 import math
+import pickle
 
 class Indexer:
 
@@ -24,12 +25,12 @@ class Indexer:
 
             # append line to file
             with io.open(temp_file_name, "a", encoding="utf-8") as f:
-                f.write(f"{[(word, len(freq)) for word, freq in tweet_data.items()]},\n")
+                f.write(f"{[(word, len(freq)) for word, freq in tweet_data.items()]}\n")
             f.close()
 
             # replace tweet data to tweet location in the original dict
             self.docs_locations[tweet_id] = (
-                file_name,
+                temp_file_name,
                 counter - math.floor(counter / self.max_tweets_in_file) * self.max_tweets_in_file
             )
 
@@ -40,7 +41,7 @@ class Indexer:
         """
         file_name = "data/terms_pointers/term_docs_{}.txt"
         for counter, term_docs in enumerate(self.parser_dictionary.items()):
-            temp_file_name =  file_name.format(math.floor(counter / self.max_terms_in_file))
+            temp_file_name = file_name.format(math.floor(counter / self.max_terms_in_file))
             term = term_docs[0]
             docs = term_docs[1]
 
@@ -49,7 +50,7 @@ class Indexer:
 
             # append line to file
             with io.open(temp_file_name, "a", encoding="utf-8") as f:
-                f.write(f"{(len(docs), temp_docs_locaions)},\n")
+                f.write(f"{(len(docs), temp_docs_locaions)}\n")
             f.close()
 
             self.indexer[term] = (
@@ -71,27 +72,30 @@ class Indexer:
         self.index_terms_and_docs()
         del self.docs_locations
 
+        # save dictionary as pickle
+        with open('dictionary.pickle', 'wb') as handle:
+            pickle.dump(self.indexer, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-    def add_new_doc(self, document):
-        """
-        This function perform indexing process for a document object.
-        Saved information is captures via two dictionaries ('inverted index' and 'posting')
-        :param document: a document need to be indexed.
-        :return: -
-        """
-
-        document_dictionary = document.term_doc_dictionary
-        # Go over each term in the doc
-        for term in document_dictionary.keys():
-            try:
-                # Update inverted index and posting
-                if term not in self.inverted_idx.keys():
-                    self.inverted_idx[term] = 1
-                    self.postingDict[term] = []
-                else:
-                    self.inverted_idx[term] += 1
-
-                self.postingDict[term].append((document.tweet_id, document_dictionary[term]))
-
-            except:
-                print('problem with the following key {}'.format(term[0]))
+    # def add_new_doc(self, document):
+    #     """
+    #     This function perform indexing process for a document object.
+    #     Saved information is captures via two dictionaries ('inverted index' and 'posting')
+    #     :param document: a document need to be indexed.
+    #     :return: -
+    #     """
+    #
+    #     document_dictionary = document.term_doc_dictionary
+    #     # Go over each term in the doc
+    #     for term in document_dictionary.keys():
+    #         try:
+    #             # Update inverted index and posting
+    #             if term not in self.inverted_idx.keys():
+    #                 self.inverted_idx[term] = 1
+    #                 self.postingDict[term] = []
+    #             else:
+    #                 self.inverted_idx[term] += 1
+    #
+    #             self.postingDict[term].append((document.tweet_id, document_dictionary[term]))
+    #
+    #         except:
+    #             print('problem with the following key {}'.format(term[0]))

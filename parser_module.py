@@ -37,6 +37,7 @@ class Parse:
 
         return text_tokens_without_stopwords
 
+
     def parse_doc(self, doc_as_named_tuple, do_stem: bool = True):
         """
         This function takes a tweet document as list and break it into different fields
