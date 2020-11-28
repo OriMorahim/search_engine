@@ -9,10 +9,8 @@ from collections import Counter, defaultdict
 class Parse:
 
     def __init__(self):
-        self.word_pointer = defaultdict(int)
         self.stop_words = stopwords.words('english')
-        self.dictionary = dict()
-        self.term_to_docs_pointer = defaultdict(set)
+        self.dictionary = defaultdict(set)
         self.tweets_words_locations = dict()
         self.capitals_counter = Counter()
         self.words_dual_representation = []
@@ -57,45 +55,20 @@ class Parse:
         term_dict = Counter(tokenized_text)
         doc_length = len(tokenized_text)  # after text operations.
 
-        # add words to dictionary
-        for term in tokenized_text:
-            first_letter = term[0]
+        # the following dict will hold the words locations for a specific tweet
+        tweet_words_locations = defaultdict(list)
 
-            # if the term do not exist in dictionary yet - add to dict and write to files
-            if term not in self.dictionary.keys():
-                file_name = f'data/terms_pointers/term_docs_{first_letter}.txt'
-                # add pointer to term
-                self.dictionary[term] = (file_name, word_pointer[first_letter])
+        # add words to dict
+        for location, term in enumerate(tokenized_text):
+                self.dictionary[term].add(tweet_id)
+                tweet_words_locations[term].append(location)
 
-                # append line to file
-                file = open(file_name, 'a')
-                file.write(f"({tweet_id}, location),\n")
-                file.close()
+        # keep tweet words locations
+        self.tweets_words_locations[tweet_id] = tweet_words_locations
 
-                # increase line pointer
-                word_pointer[first_letter] += 1
-
-            # if term do exist in dict then  append "term_docs" another doc in the end of the line
-            else:
-                file_name = self.dictionary[term][0]
-                line_number = self.dictionary[term][1]
-
-                # append line to file
-                file = open(file_name, "r")
-                lines = file.readlines()
-                lines[line_number] = lines[line_number].replace('\n', f"({tweet_id}, location),\n")
-                file.writelines(lines)
-                file.close()
-
-
-        # insert data to Documnet structure
-        document = Document(tweet_id, tweet_date, full_text, url, retweet_text, retweet_url, quote_text,
-                            quote_url, term_dict, doc_length)
-        return document
 
     def parse_corpus(self, df):
         """
-
         :param df:
         :return:
         """
@@ -131,8 +104,6 @@ class Parse:
             for tweet in self.dictionary[capital]:
                 self.tweets_words_locations[tweet][capital.lower()].extend(self.tweets_words_locations[tweet].pop(capital))
             self.dictionary[capital.lower()].union(self.dictionary.pop(capital))
-
-        return documnets
 
 
     def hash_tag_tokenizer(self, tokens: str)->str:
@@ -180,5 +151,7 @@ class Parse:
 #from reader import ReadFile
 #reader_ = ReadFile('C:/Users/orimo/Documents/study_bgu/information_retrival/Data')
 #df = reader_.read_and_concat_all_parquet_in_dir_of_dirs(1)
-#docs = parse_.parse_corpus(df.head(100))
-
+#parse_.parse_corpus(df.head(100))
+#from indexer import *
+#ind = Indexer()
+#ind.index_docs(parse_.tweets_words_locations)
