@@ -1,30 +1,31 @@
+import io
 import math
 
 class Indexer:
 
-    def __init__(self, parser_dictionary, parser_tweets_words_locations, config):
+    def __init__(self, parser_dictionary, parser_tweets_words_locations):#, config):
         self.max_tweets_in_file = 10000
         self.max_terms_in_file = 1500
         self.parser_dictionary = parser_dictionary
         self.parser_tweets_words_locations = parser_tweets_words_locations
         self.docs_locations = dict()
         self.indexer = dict()
-        self.config = config
+        #self.config = config
 
     def index_docs(self):
         """
-
         :return:
         """
+        file_name = "data/docs/docs_data_{}.txt"
         for counter, tweet in enumerate(self.parser_tweets_words_locations.items()):
-            file_name = f"data/docs/docs_data_{math.floor(counter/self.max_tweets_in_file)}.txt"
+            temp_file_name = file_name.format(math.floor(counter / self.max_tweets_in_file))
             tweet_id = tweet[0]
             tweet_data = tweet[1]
 
             # append line to file
-            file = open(file_name, 'a')
-            file.write(f"{tweet_data},\n")
-            file.close()
+            with io.open(temp_file_name, "a", encoding="utf-8") as f:
+                f.write(f"{[(word, len(freq)) for word, freq in tweet_data.items()]},\n")
+            f.close()
 
             # replace tweet data to tweet location in the original dict
             self.docs_locations[tweet_id] = (
@@ -32,33 +33,28 @@ class Indexer:
                 counter - math.floor(counter / self.max_tweets_in_file) * self.max_tweets_in_file
             )
 
-            del self.parser_tweets_words_locations[tweet_id]
-
 
     def index_terms_and_docs(self):
         """
-
         :return:
         """
         file_name = "data/terms_pointers/term_docs_{}.txt"
         for counter, term_docs in enumerate(self.parser_dictionary.items()):
-            temp_file_name =  file_name.format(math.floor(counter / self.max_terms_in_file))
+            temp_file_name = file_name.format(math.floor(counter / self.max_terms_in_file))
             term = term_docs[0]
             docs = term_docs[1]
 
             # append line to file
-            docs_locaions = [(doc, self.docs_locations[doc]) for doc in docs]
+            temp_docs_locaions = [(doc, self.docs_locations[doc]) for doc in docs]
 
-            file = open(temp_file_name, 'a')
-            file.write(f"{(len(docs), docs_locaions)},\n")
-            file.close()
+            with io.open(temp_file_name, "a", encoding="utf-8") as f:
+                f.write(f"{(len(docs), temp_docs_locaions)},\n")
+            f.close()
 
             self.indexer[term] = (
                 temp_file_name,
                 counter - math.floor(counter / self.max_terms_in_file) * self.max_terms_in_file
             )
-
-            del self.parser_dictionary[term]
 
 
 
