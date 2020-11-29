@@ -152,7 +152,11 @@ class Parse:
 # from reader import ReadFile
 # reader_ = ReadFile('C:/Users/orimo/Documents/study_bgu/information_retrival/Data')
 # df = reader_.read_and_concat_all_parquet_in_dir_of_dirs(1)
-# parse_.parse_corpus(df.head(200))
+# parse_.parse_corpus(df.head(1000))
 # from indexer import *
 # ind = Indexer(parse_.dictionary, parse_.tweets_words_locations)
 # ind.index_docs()
+# import searcher
+# search = searcher.Searcher()
+# search.indexer
+# res = search.relevant_docs_from_posting(['FL', 'ER', 'AP'])
