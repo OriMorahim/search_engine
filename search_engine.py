@@ -39,8 +39,8 @@ def search_and_rank_query(query, inverted_index, k):
     query_as_list = p.parse_sentence(query)
     searcher = Searcher()
     docs, words_occ = searcher.relevant_docs_from_posting(query_as_list)
-    ranked_docs = ranker.tf_idf(docs, query_as_list)
-    return searcher.ranker.retrieve_top_k(ranked_docs, k)
+    ranked_docs = ranker.tf_idf(docs, query_as_list, k)
+    return ranker.fetch_top(ranked_docs, k)
 
 
 def main():
@@ -50,3 +50,4 @@ def main():
     inverted_index = load_index()
     for doc_tuple in search_and_rank_query(query, inverted_index, k):
         print('tweet id: {}, score (TF-IDF): {}'.format(doc_tuple[0], doc_tuple[1]))
+

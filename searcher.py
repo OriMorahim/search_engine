@@ -28,14 +28,15 @@ class Searcher:
         :param query: query
         :return: dictionary of relevant documents.
         """
-        terms_df = []
+        terms_df = {}
         docs_pointers = []
         for token in query:
             if token in self.indexer.keys():
                 pointer_to_docs = self.indexer[token]
                 line = linecache.getline(pointer_to_docs[0], pointer_to_docs[1])
                 line_data = line.split(sep=', [')
-                terms_df.append((token, int(re.sub(r'[^0-9]', '', line_data[0]))))
+                terms_df[token] = int(re.sub(r'[^0-9]', '', line_data[0]))
+                #terms_df((token, int(re.sub(r'[^0-9]', '', line_data[0]))))
                 docs = line_data[1][:-3].replace('),', ') |').split(" | ")
                 docs_pointers.extend(docs)
 

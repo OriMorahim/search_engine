@@ -293,3 +293,11 @@ class Parse:
 # from indexer import *
 # ind = Indexer(parse_.dictionary, parse_.tweets_words_locations)
 # ind.index_docs()
+
+# import searcher
+# search = searcher.Searcher()
+# docs, idfs = search.relevant_docs_from_posting(['covid'])
+# import ranker
+# rank = ranker.Ranker()
+# rank.tf_idf(docs, idfs, ['covid', 'never'])
+

@@ -28,22 +28,24 @@ class Ranker:
 
         return sorted_relevant_doc[:k]
 
-    def tf_idf(self, documents, query, max_docs: int = 2000):
+    def tf_idf(self, documents, query, max_docs: int = 1):
+        results = {}
+
         N = len(documents)
         q = len(query)
-        for location, doc in enumerate(documents):
+        for location, doc in documents:
             sim = 0
             cosin_sim = 0
             denominator = 0
+            max_count = max(doc, key=lambda item: item[1])[1]
             for term in doc:
                 dfi = 0
-                for doc_ in documents:
+                for id_, doc_ in documents:
                     for do_c in doc_:
                         if term[0] in do_c[0]:
                             dfi += 1
                 tf = term[1]
-                max_count = max(doc, key=lambda item:item[1])
-                tf = tf / max_count[1]
+                tf = tf / max_count
                 idf = math.log(N/dfi, 2)
                 if term[0] in query:
                     sim = sim + tf * idf
@@ -52,8 +54,11 @@ class Ranker:
                 cosin_sim = 0
             else:
                 cosin_sim = sim/(math.sqrt(q*denominator))
-            self.final_results[location] = cosin_sim
-        self.final_results = sorted(self.final_results.items(), key=lambda x: x[1], reverse=True)
+            results[location] = cosin_sim
+        results = sorted(results.items(), key=lambda x: x[1], reverse=True)
+
+        return results
+
 
 
 
