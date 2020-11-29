@@ -1,5 +1,10 @@
+import math
+from collections import defaultdict
+
+
 class Ranker:
     def __init__(self):
+        self.final_results = dict()
         pass
 
     @staticmethod
@@ -20,4 +25,36 @@ class Ranker:
         :param k: Number of top document to return
         :return: list of relevant document
         """
+
         return sorted_relevant_doc[:k]
+
+    def tf_idf(self, documents, query, max_docs: int = 2000):
+        N = len(documents)
+        q = len(query)
+        for location, doc in enumerate(documents):
+            sim = 0
+            cosin_sim = 0
+            denominator = 0
+            for term in doc:
+                dfi = 0
+                for doc_ in documents:
+                    for do_c in doc_:
+                        if term[0] in do_c[0]:
+                            dfi += 1
+                tf = term[1]
+                max_count = max(doc, key=lambda item:item[1])
+                tf = tf / max_count[1]
+                idf = math.log(N/dfi, 2)
+                if term[0] in query:
+                    sim = sim + tf * idf
+                denominator = denominator + math.pow(tf*idf, 2)
+            if denominator == 0:
+                cosin_sim = 0
+            else:
+                cosin_sim = sim/(math.sqrt(q*denominator))
+            self.final_results[location] = cosin_sim
+        self.final_results = sorted(self.final_results.items(), key=lambda x: x[1], reverse=True)
+
+
+
+

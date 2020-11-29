@@ -25,13 +25,13 @@ class Indexer:
 
             # append line to file
             with io.open(temp_file_name, "a", encoding="utf-8") as f:
-                f.write(f"{[(word, len(freq)) for word, freq in tweet_data.items()]}\n")
+                f.write(f"{(tweet_id, [(word, len(freq)) for word, freq in tweet_data.items()])}\n")
             f.close()
 
             # replace tweet data to tweet location in the original dict
             self.docs_locations[tweet_id] = (
                 temp_file_name,
-                counter - math.floor(counter / self.max_tweets_in_file) * self.max_tweets_in_file
+                (counter - math.floor(counter / self.max_tweets_in_file) * self.max_tweets_in_file)+1
             )
 
 
@@ -55,7 +55,7 @@ class Indexer:
 
             self.indexer[term] = (
                 temp_file_name,
-                counter - math.floor(counter / self.max_terms_in_file) * self.max_terms_in_file
+                (counter - math.floor(counter / self.max_terms_in_file) * self.max_terms_in_file)+1
             )
 
 

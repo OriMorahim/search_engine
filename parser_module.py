@@ -22,7 +22,10 @@ class Parse:
         :param text:
         :return:
         """
-        hashtag_tokenize = self.hash_tag_tokenizer(text)             # parse hashtags
+        text_tokens = self.remove_single_chars(text)                 # parse non relevant chars
+        text_tokens = self.hyphen_fixer(text_tokens)                 # parse by hyphen "-","/","&"
+        hashtag_tokenize = self.hash_tag_tokenizer(text_tokens)      # parse hashtags
+        text_tokens = self.number_tokenizer(text_tokens)             # parse numbers
         url_tokenize = self.url_tokenizer(hashtag_tokenize)          # parse url
         text_tokens = word_tokenize(url_tokenize)                    # tokenization
 
@@ -38,7 +41,7 @@ class Parse:
         return text_tokens_without_stopwords
 
 
-    def parse_doc(self, doc_as_named_tuple, do_stem: bool = True):
+    def parse_doc(self, doc_as_named_tuple, do_stem: bool = False):
         """
         This function takes a tweet document as list and break it into different fields
         :param doc_as_list: list re-preseting the tweet.
@@ -107,10 +110,12 @@ class Parse:
             self.dictionary[capital.lower()].union(self.dictionary.pop(capital))
 
 
-    def hash_tag_tokenizer(self, tokens: str)->str:
+    def hash_tag_tokenizer(self, tokens: str) -> str:
         string = ""
         for word in tokens.split():
-            if word[0] == "#":
+            if word == "RT":
+                continue
+            if word.startswith("#"):
                 word = word[1:]
                 if "_" in word:
                     split_by_underscore = " ".join(word.split("_"))
@@ -122,41 +127,169 @@ class Parse:
                 string = string + "#" + word + " "
             else:
                 string = string + word + " "
-        return string #.lower()
+        return string
 
-    def url_tokenizer(self, tokens:str)->str:
-       string = ""
-       url = []
-       for w in tokens.split():
-
-           if bool(re.search("http|https|www", w)):
+    def url_tokenizer(self, tokens: str) -> str:
+        string = ""
+        url = []
+        for w in tokens.split():
+            if len(w) < 2:
+                continue
+            if bool(re.search("http|https|www", w)):
                 url = (re.split(r"\W+", w))
                 url_to_string = ' '.join(url)
                 string = string + url_to_string + " "
-           else:
-               string = string + w + " "
-       return string
+            else:
+                string = string + w + " "
+        return string
 
-    def stemmer(self, tokens: list)->list:
-
+    def stemmer(self, tokens: str) -> str:
         ps = PorterStemmer()
-        dfs = []
-        for word in tokens:
-                dfs.append(ps.stem(word))
-        return dfs
+        string = ""
+        for word in tokens.split():
+            string = string + ps.stem(word) + " "
 
+        return string
 
+    def percentage_tokenizer(self, tokens: str) -> str:
+
+        string = ""
+        ans = False
+        for w in tokens.split():
+            if ans:
+                if w == "percent" or w == "percentage":
+                    string = string + "%" + " "
+                    ans = False
+                    continue
+                else:
+                    string = string + " "
+            try:
+                if float(w):
+                    string = string + w
+                    ans = True
+                    continue
+            except ValueError:
+                string = string + w + " "
+
+        return string
+
+    def number_tokenizer(self, tokens: str) -> str:
+        string = ""
+        kmb = ""
+        number = False
+        for w in tokens.split():
+            if number:
+                if w == "Thousand":
+                    kmb = kmb + "K"
+                    if kmb == "KK":
+                        string = string[:-1] + "M"
+                        kmb = ""
+                        continue
+                    elif kmb == "MK" or kmb == "KM":
+                        string = string[:-1] + "B"
+                        kmb = ""
+                        continue
+                    else:
+                        string = string + "K"
+                        continue
+                elif w == "Million":
+                    kmb = kmb + "M"
+                    if kmb == "MK" or kmb == "KM":
+                        string = string[:-1] + "B"
+                        kmb = ""
+                        continue
+                    else:
+                        string = string + "M"
+                        continue
+                elif w == "Billion":
+                    string = string + "B"
+                    continue
+                else:
+                    string = string + " "
+                    number = False
+            kmb = ""
+            try:
+                if float(w):
+                    num = float(w)
+                    if num < 1000:
+                        number = True
+                        string = string + w
+                        continue
+                    elif num < 1000000:
+                        num = num / 1000
+                        num = round(num, 3)
+                        num = str(num)
+                        if num.endswith(".0"):
+                            num = num.replace(".0", "")
+                        string = string + num + "K"
+                        kmb = kmb + "K"
+                        number = True
+                        continue
+                    elif num < 1000000000.00:
+                        num = num / 1000000
+                        num = round(num, 3)
+                        num = str(num)
+                        if num.endswith(".0"):
+                            num = num.replace(".0", "")
+                        string = string + num + "M"
+                        kmb = kmb + "M"
+                        number = True
+                        continue
+                    elif num >= 1000000000:
+                        num = num / 1000000000.000
+                        num = round(num, 3)
+                        num = str(num)
+                        if num.endswith(".0"):
+                            num = num.replace(".0", "")
+                        string = string + num + "B"
+                        number = True
+                        continue
+            except:
+                string = string + w + " "
+
+        return string
+
+    def remove_single_chars(self, tokens: str) -> str:
+        string = ""
+        for w in tokens.split():
+            w = w.replace("!", "").replace("?", "").replace(":", "").replace("’", "").replace("…", "").replace(";", "")
+            w = w.replace('"', '').replace("”", "").replace("'", "").replace("*", "").replace("😂", "").replace("“", "")
+            w = w.replace("❤", "").replace("😭", "").replace(",", "")
+            if "." in w:
+                try:
+                    if float(w):
+                        []
+                except:
+                    w = w.replace(".", "")
+            if len(w) > 1 or w.isdigit():
+                string = string + w + " "
+
+        return string
+
+    def hyphen_fixer(self, tokens: str) -> str:
+        string = ""
+        dual_string = ""
+        period = ""
+        for w in tokens.split():
+            if "-" in w:
+                # dual_string = w
+                string = string + " " + " ".join(w.split("-")) + " "
+            elif "/" in w:
+                # dual_string = w
+                string = string + " " + " ".join(w.split("/")) + " "
+            elif "&" in w:
+                # dual_string = w
+                string = string + " " + " ".join(w.split("&")) + " "
+            else:
+                string = string + w + " "
+        return string
 
 # from parser_module import Parse
 # parse_ = Parse()
 # from reader import ReadFile
 # reader_ = ReadFile('C:/Users/orimo/Documents/study_bgu/information_retrival/Data')
 # df = reader_.read_and_concat_all_parquet_in_dir_of_dirs(1)
-# parse_.parse_corpus(df.head(1000))
+# parse_.parse_corpus(df.head(200))
 # from indexer import *
 # ind = Indexer(parse_.dictionary, parse_.tweets_words_locations)
 # ind.index_docs()
-# import searcher
-# search = searcher.Searcher()
-# search.indexer
-# res = search.relevant_docs_from_posting(['FL', 'ER', 'AP'])
