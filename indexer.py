@@ -1,12 +1,13 @@
 import io
+import time
 import math
 import pickle
 
 class Indexer:
 
-    def __init__(self, parser_dictionary, parser_tweets_words_locations):#, config):
-        self.max_tweets_in_file = 10000
-        self.max_terms_in_file = 1500
+    def __init__(self, parser_dictionary, parser_tweets_words_locations):
+        self.max_tweets_in_file = 100000
+        self.max_terms_in_file = 50000
         self.parser_dictionary = parser_dictionary
         self.parser_tweets_words_locations = parser_tweets_words_locations
         self.docs_locations = dict()
@@ -17,16 +18,20 @@ class Indexer:
         """
         :return:
         """
+        start = time.time()
         file_name = "data/docs/docs_data_{}.txt"
+        batch_writing = ""
         for counter, tweet in enumerate(self.parser_tweets_words_locations.items()):
             temp_file_name = file_name.format(math.floor(counter / self.max_tweets_in_file))
             tweet_id = tweet[0]
             tweet_data = tweet[1]
+            batch_writing = batch_writing+f"{(tweet_id, [(word, len(freq)) for word, freq in tweet_data.items()])}\n"
 
-            # append line to file
-            with io.open(temp_file_name, "a", encoding="utf-8") as f:
-                f.write(f"{(tweet_id, [(word, len(freq)) for word, freq in tweet_data.items()])}\n")
-            f.close()
+            if (counter%5000==0) | (counter % self.max_tweets_in_file == self.max_tweets_in_file-1):
+                with io.open(temp_file_name, "a", encoding="utf-8") as f:
+                    f.write(batch_writing)
+                batch_writing = ""
+                print("Done writing batch of docs")
 
             # replace tweet data to tweet location in the original dict
             self.docs_locations[tweet_id] = (
@@ -34,6 +39,9 @@ class Indexer:
                 (counter - math.floor(counter / self.max_tweets_in_file) * self.max_tweets_in_file)+1
             )
 
+        with io.open(temp_file_name, "a", encoding="utf-8") as f:
+            f.write(batch_writing)
+            print("writing last batch", counter, f"\nTime: {(time.time()-start)/60}")
 
     def index_terms_and_docs(self):
         """
@@ -51,7 +59,6 @@ class Indexer:
             # append line to file
             with io.open(temp_file_name, "a", encoding="utf-8") as f:
                 f.write(f"{(len(docs), temp_docs_locaions)}\n")
-            f.close()
 
             self.indexer[term] = (
                 temp_file_name,
@@ -75,27 +82,3 @@ class Indexer:
         # save dictionary as pickle
         with open('dictionary.pickle', 'wb') as handle:
             pickle.dump(self.indexer, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-    # def add_new_doc(self, document):
-    #     """
-    #     This function perform indexing process for a document object.
-    #     Saved information is captures via two dictionaries ('inverted index' and 'posting')
-    #     :param document: a document need to be indexed.
-    #     :return: -
-    #     """
-    #
-    #     document_dictionary = document.term_doc_dictionary
-    #     # Go over each term in the doc
-    #     for term in document_dictionary.keys():
-    #         try:
-    #             # Update inverted index and posting
-    #             if term not in self.inverted_idx.keys():
-    #                 self.inverted_idx[term] = 1
-    #                 self.postingDict[term] = []
-    #             else:
-    #                 self.inverted_idx[term] += 1
-    #
-    #             self.postingDict[term].append((document.tweet_id, document_dictionary[term]))
-    #
-    #         except:
-    #             print('problem with the following key {}'.format(term[0]))

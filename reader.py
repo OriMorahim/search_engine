@@ -2,8 +2,7 @@ import os
 import glob
 import pandas as pd
 
-RELEVANT_COLUMS = ["tweet_id", "tweet_date", "full_text", "urls",
-                   "retweet_text", "retweet_urls", "quoted_text", "quote_urls"]
+RELEVANT_COLUMS = ["tweet_id", "full_text"]
 
 class ReadFile:
     def __init__(self, corpus_path):

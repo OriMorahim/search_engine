@@ -48,16 +48,8 @@ class Parse:
         :return: Document object with corresponding fields.
         """
         tweet_id = doc_as_named_tuple.tweet_id
-        tweet_date = doc_as_named_tuple.tweet_date #
         full_text = doc_as_named_tuple.full_text
-        url = doc_as_named_tuple.urls #
-        retweet_text = doc_as_named_tuple.retweet_text #
-        retweet_url = doc_as_named_tuple.retweet_urls #
-        quote_text = doc_as_named_tuple.quoted_text #
-        #quote_url = doc_as_named_tuple.quote_urls #
         tokenized_text = self.parse_sentence(full_text, do_stem)
-        #term_dict = Counter(tokenized_text)
-        #doc_length = len(tokenized_text)  # after text operations.
 
         # the following dict will hold the words locations for a specific tweet
         tweet_words_locations = defaultdict(list)

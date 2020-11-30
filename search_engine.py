@@ -7,7 +7,7 @@ import ranker
 import utils
 
 
-def run_engine(files_to_read: int = 100):
+def run_engine():
     """
 
     :return:
@@ -15,11 +15,11 @@ def run_engine(files_to_read: int = 100):
     number_of_documents = 0
 
     config = ConfigClass()
-    r = ReadFile(corpus_path=config.get__corpusPath())
+    r = ReadFile(config.get__corpusPath())
     p = Parse()
 
     # read and parse data
-    dfs = r.read_and_concat_all_parquet_in_dir_of_dirs()
+    dfs = r.read_and_concat_all_parquet_in_dir_of_dirs(1)
     p.parse_corpus(dfs)
 
     # indexing the data
@@ -36,11 +36,12 @@ def load_index():
 
 def search_and_rank_query(query, inverted_index, k):
     p = Parse()
-    query_as_list = p.parse_sentence(query)
+    Ranker = ranker.Ranker()
+    query_as_list = p.parse_sentence(query,False)
     searcher = Searcher()
-    docs, words_occ = searcher.relevant_docs_from_posting(query_as_list)
-    ranked_docs = ranker.tf_idf(docs, query_as_list, k)
-    return ranker.fetch_top(ranked_docs, k)
+    docs, terms_doc_freq = searcher.relevant_docs_from_posting(query_as_list)
+    ranked_docs = Ranker.tf_idf(docs, terms_doc_freq, query_as_list)
+    return Ranker.fetch_top(ranked_docs, k)
 
 
 def main():
@@ -50,4 +51,3 @@ def main():
     inverted_index = load_index()
     for doc_tuple in search_and_rank_query(query, inverted_index, k):
         print('tweet id: {}, score (TF-IDF): {}'.format(doc_tuple[0], doc_tuple[1]))
-
