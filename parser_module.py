@@ -16,6 +16,7 @@ class Parse:
         self.capitals_counter = Counter()
         self.words_dual_representation = []
         self.words_capital_representation = []
+        self.seen_capital = set()
 
     def parse_sentence(self, text, do_stem: bool):
         """
@@ -37,6 +38,7 @@ class Parse:
             elif "#" in ans or "_" in ans:  # parse hashtags
                 ans = self.hash_tag_tokenizer(ans)
 
+
             string = string + " " + ans
 
         text_tokens = word_tokenize(string)  # tokenization
@@ -46,7 +48,12 @@ class Parse:
             text_tokens = self.stemmer(text_tokens)
            # print("after stemming:", text_tokens)
 
-        text_tokens_without_stopwords = [w for w in text_tokens if w.lower() not in self.stop_words]
+        text_tokens_without_stopwords = []#[w for w in text_tokens if w.lower() not in self.stop_words]
+        for w in text_tokens:
+            if w not in self.stop_words:
+                text_tokens_without_stopwords.append(w)
+                if w[0].isupper():
+                    self.seen_capital.add(w)
 
         self.capitals_counter.update(text_tokens_without_stopwords)
 
@@ -92,11 +99,6 @@ class Parse:
         :param df:
         :return:
         """
-        # # parse each tweet and insert result to a document
-        # for df in dfs:
-        #     self.parse_batch_of_docs(df)
-        #     print('finish parse batch')
-        #
         while dfs:
             df = dfs.pop()
             print(f"batch size to parse: {df.shape[0]} {time.ctime()}")
@@ -104,13 +106,13 @@ class Parse:
             print(f'finish parse batch {time.ctime()}')
 
         # fetch words with capital letter
-        all_words = set(self.capitals_counter.keys())
-        uppers_as_lowers = set([word for word in all_words if word[0].isupper()]) # can be avoided
-        self.words_dual_representation = set([word for word in uppers_as_lowers if word.lower() in all_words])
-        self.words_capital_representation = uppers_as_lowers-self.words_dual_representation
+        #all_words = set(self.capitals_counter.keys()) # Avoid
+        #uppers_as_lowers = set([word for word in all_words if word[0].isupper()]) # can be avoided
+        self.words_dual_representation = set([word for word in self.seen_capital if word.lower() in self.capitals_counter.keys()])
+        self.words_capital_representation = self.seen_capital-self.words_dual_representation
 
         # for each word that appear only with capital change the word to be all capital
-        for upper_as_lower in uppers_as_lowers:
+        for upper_as_lower in self.seen_capital:
             if upper_as_lower in self.words_capital_representation:
                 self.capitals_counter[upper_as_lower.upper()] = self.capitals_counter.pop(upper_as_lower)
             # if the word appear as capital and lower convert the capital to lower and fix Counter
