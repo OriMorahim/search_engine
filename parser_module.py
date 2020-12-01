@@ -24,9 +24,10 @@ class Parse:
         :param text:
         :return:
         """
-        text_tokens = self.percentage_tokenizer(text)  # parse percent
+        text_tokens = self.number_tokenizer(text)  # parse percent
         if "percent" in text_tokens or "percentage" in text_tokens:
-            text_tokens = self.number_tokenizer(text_tokens)  # parse numbers
+            text_tokens = self.percentage_tokenizer(text_tokens)  # parse numbers
+
         ans = ""
         string = ""
         for w in text_tokens.split():
@@ -106,8 +107,6 @@ class Parse:
             print(f'finish parse batch {time.ctime()}')
 
         # fetch words with capital letter
-        #all_words = set(self.capitals_counter.keys()) # Avoid
-        #uppers_as_lowers = set([word for word in all_words if word[0].isupper()]) # can be avoided
         self.words_dual_representation = set([word for word in self.seen_capital if word.lower() in self.capitals_counter.keys()])
         self.words_capital_representation = self.seen_capital-self.words_dual_representation
 
@@ -276,9 +275,10 @@ class Parse:
 
     def remove_single_chars(self, w: str) -> str:
         string = ""
-        w = w.replace("!", "").replace("?", "").replace(":", "").replace("’", "").replace("…", "").replace(";", "")
-        w = w.replace('"', '').replace("”", "").replace("'", "").replace("*", "").replace("😂", "").replace("“", "")
-        w = w.replace("❤", "").replace("😭", "").replace(",", "")
+        w = re.sub(r'[^a-zA-Z0-9\s@#]', '', w)
+        # w = w.replace("!", "").replace("?", "").replace(":", "").replace("’", "").replace("…", "").replace(";", "")
+        # w = w.replace('"', '').replace("”", "").replace("'", "").replace("*", "").replace("😂", "").replace("“", "")
+        # w = w.replace("❤", "").replace("😭", "").replace(",", "")
         if "." in w:
             try:
                 if float(w):
@@ -315,7 +315,7 @@ class Parse:
 # parse_.parse_corpus(df.head(200))
 # from indexer import *
 # ind = Indexer(parse_.dictionary, parse_.tweets_words_locations)
-# ind.index_docs()
+# ind.indexing()
 
 # import searcher
 # search = searcher.Searcher()

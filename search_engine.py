@@ -3,6 +3,7 @@ from configuration import ConfigClass
 from parser_module import Parse
 from indexer import Indexer
 from searcher import Searcher
+from nltk.corpus import lin_thesaurus as thes
 import ranker
 import utils
 import time
@@ -22,7 +23,7 @@ def run_engine():
     # read and parse data
     print("Start read data")
     start = time.time()
-    dfs = r.read_and_concat_all_parquet_in_dir_of_dirs(3)
+    dfs = r.read_and_concat_all_parquet_in_dir_of_dirs(10)
     print(f"Data reading done, time since process start: {(time.time()-start)/60} min")
     p.parse_corpus(dfs)
     print(f"Data parsing done, time since process start: {(time.time()-start)/60} min")

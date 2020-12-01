@@ -28,7 +28,7 @@ class Indexer:
             tweet_data = tweet[1]
             batch_writing = batch_writing+f"{(tweet_id, [(word, len(freq)) for word, freq in tweet_data.items()])}\n"
 
-            if (counter%5000==0) | (counter % self.max_tweets_in_file == self.max_tweets_in_file-1):
+            if (counter%1500==0) | (counter % self.max_tweets_in_file == self.max_tweets_in_file-1):
                 with io.open(temp_file_name, "a", encoding="utf-8") as f:
                     f.write(batch_writing)
                 batch_writing = ""
@@ -54,6 +54,7 @@ class Indexer:
             'counters': defaultdict(int),
             'pointers': defaultdict(str)
         }
+
         for counter, term_docs in enumerate(self.parser_dictionary.items()):
             temp_file_name = file_name.format(math.floor(counter / self.max_terms_in_file))
             term = term_docs[0]
@@ -62,7 +63,6 @@ class Indexer:
             # append line to file
             temp_docs_locaions = [(doc, self.docs_locations[doc]) for doc in docs]
             files_batches['counters'][temp_file_name] += 1
-            #print('Counter for', temp_file_name, files_batches['counters'][temp_file_name])
             files_batches['pointers'][temp_file_name] += f"{(len(docs), temp_docs_locaions)}\n"
 
             # batch writing to a file
