@@ -2,6 +2,7 @@ import io
 import time
 import math
 import pickle
+from collections import defaultdict
 
 class Indexer:
 
@@ -43,11 +44,16 @@ class Indexer:
             f.write(batch_writing)
             print("writing last batch", counter, f"\nTime: {(time.time()-start)/60}")
 
+
     def index_terms_and_docs(self):
         """
         :return:
         """
         file_name = "data/terms_pointers/term_docs_{}.txt"
+        files_batches = {
+            'counters': defaultdict(int),
+            'pointers': defaultdict(str)
+        }
         for counter, term_docs in enumerate(self.parser_dictionary.items()):
             temp_file_name = file_name.format(math.floor(counter / self.max_terms_in_file))
             term = term_docs[0]
@@ -55,15 +61,28 @@ class Indexer:
 
             # append line to file
             temp_docs_locaions = [(doc, self.docs_locations[doc]) for doc in docs]
+            files_batches['counters'][temp_file_name] += 1
+            #print('Counter for', temp_file_name, files_batches['counters'][temp_file_name])
+            files_batches['pointers'][temp_file_name] += f"{(len(docs), temp_docs_locaions)}\n"
 
-            # append line to file
-            with io.open(temp_file_name, "a", encoding="utf-8") as f:
-                f.write(f"{(len(docs), temp_docs_locaions)}\n")
+            # batch writing to a file
+            if files_batches['counters'][temp_file_name] % 500 == 0:
+                with io.open(temp_file_name, "a", encoding="utf-8") as f:
+                    f.write(files_batches['pointers'][temp_file_name])
+                files_batches['pointers'][temp_file_name] = ""
+                print(f'Batch of terms to pointers as been done {temp_file_name}')
 
             self.indexer[term] = (
                 temp_file_name,
                 (counter - math.floor(counter / self.max_terms_in_file) * self.max_terms_in_file)+1
             )
+
+        # write all remainings
+        for temp_file_name, remain_content in files_batches['pointers'].items():
+            if len(remain_content)>0:
+                with io.open(temp_file_name, "a", encoding="utf-8") as f:
+                    f.write(remain_content)
+                print(f"last batch {temp_file_name}")
 
 
     def indexing(self):

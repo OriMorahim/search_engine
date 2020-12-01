@@ -69,10 +69,8 @@ class Parse:
         :return:
         """
         # parse each tweet and insert result to a document
-#        documnets = []
         for row in df.itertuples():
             document = self.parse_doc(row)
-            #documnets.append(document)
 
         # fetch words with capital letter
         all_words = set(self.capitals_counter.keys())
