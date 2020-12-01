@@ -1,4 +1,5 @@
 import re
+import time
 import pandas as pd
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
@@ -22,12 +23,23 @@ class Parse:
         :param text:
         :return:
         """
-        text_tokens = self.remove_single_chars(text)                 # parse non relevant chars
-        text_tokens = self.hyphen_fixer(text_tokens)                 # parse by hyphen "-","/","&"
-        hashtag_tokenize = self.hash_tag_tokenizer(text_tokens)      # parse hashtags
-        text_tokens = self.number_tokenizer(text_tokens)             # parse numbers
-        url_tokenize = self.url_tokenizer(hashtag_tokenize)          # parse url
-        text_tokens = word_tokenize(url_tokenize)                    # tokenization
+        text_tokens = self.percentage_tokenizer(text)  # parse percent
+        if "percent" in text_tokens or "percentage" in text_tokens:
+            text_tokens = self.number_tokenizer(text_tokens)  # parse numbers
+        ans = ""
+        string = ""
+        for w in text_tokens.split():
+            ans = self.remove_single_chars(w)
+            if "http" in w or "https" in w or "www" in w:
+                ans = self.url_tokenizer(ans)
+            elif "-" in ans or "/" in ans or "&" in ans:
+                ans = self.hyphen_fixer(ans)
+            elif "#" in ans or "_" in ans:  # parse hashtags
+                ans = self.hash_tag_tokenizer(ans)
+
+            string = string + " " + ans
+
+        text_tokens = word_tokenize(string)  # tokenization
 
         # if stemming is necessary
         if do_stem:
@@ -87,15 +99,13 @@ class Parse:
         #
         while dfs:
             df = dfs.pop()
-            print(f"batch size to parse: {df.shape[0]}")
+            print(f"batch size to parse: {df.shape[0]} {time.ctime()}")
             self.parse_batch_of_docs(df)
-            print('finish parse batch')
-
-
+            print(f'finish parse batch {time.ctime()}')
 
         # fetch words with capital letter
         all_words = set(self.capitals_counter.keys())
-        uppers_as_lowers = set([word for word in all_words if word[0].isupper()])
+        uppers_as_lowers = set([word for word in all_words if word[0].isupper()]) # can be avoided
         self.words_dual_representation = set([word for word in uppers_as_lowers if word.lower() in all_words])
         self.words_capital_representation = uppers_as_lowers-self.words_dual_representation
 
@@ -121,38 +131,36 @@ class Parse:
             self.dictionary[capital.lower()].union(self.dictionary.pop(capital))
 
 
-    def hash_tag_tokenizer(self, tokens: str) -> str:
+    def hash_tag_tokenizer(self, word: str) -> str:
         string = ""
-        for word in tokens.split():
-            if word == "RT":
-                continue
-            if word.startswith("#"):
-                word = word[1:]
-                if "_" in word:
-                    split_by_underscore = " ".join(word.split("_"))
-                    string = string + split_by_underscore + " "
-                else:
-                    split_by_caps = " ".join([a for a in re.split('([A-Z][a-z]+)', word) if a])
-                    string = string + split_by_caps + " "
-                word = "".join(word.split("_"))
-                string = string + "#" + word + " "
-            else:
-                string = string + word + " "
-        return string
 
-    def url_tokenizer(self, tokens: str) -> str:
+        # if word == "RT":
+        #     continue
+        string = word
+        word = word[1:]
+        if "_" in word:
+            split_by_underscore = " ".join(word.split("_"))
+            string = string + " " + split_by_underscore
+            return string
+        else:
+            split_by_caps = " ".join([a for a in re.split('([A-Z][a-z]+)', word) if a])
+            string = string + " " + split_by_caps
+            return string
+
+        return word
+
+
+    def url_tokenizer(self, w: str) -> str:
         string = ""
         url = []
-        for w in tokens.split():
-            if len(w) < 2:
-                continue
-            if bool(re.search("http|https|www", w)):
-                url = (re.split(r"\W+", w))
-                url_to_string = ' '.join(url)
-                string = string + url_to_string + " "
-            else:
-                string = string + w + " "
+        # if len(w) < 2:
+        #     continue
+        url = (re.split(r"\W+", w))
+        url_to_string = ' '.join(url)
+        string = url_to_string
+
         return string
+
 
     def stemmer(self, tokens: str) -> str:
         ps = PorterStemmer()
@@ -162,11 +170,13 @@ class Parse:
 
         return string
 
-    def percentage_tokenizer(self, tokens: str) -> str:
 
+    def percentage_tokenizer(self, tokens: str) -> str:
         string = ""
         ans = False
         for w in tokens.split():
+            if w == "RT":
+                continue
             if ans:
                 if w == "percent" or w == "percentage":
                     string = string + "%" + " "
@@ -183,6 +193,7 @@ class Parse:
                 string = string + w + " "
 
         return string
+
 
     def number_tokenizer(self, tokens: str) -> str:
         string = ""
@@ -260,39 +271,38 @@ class Parse:
 
         return string
 
-    def remove_single_chars(self, tokens: str) -> str:
+
+    def remove_single_chars(self, w: str) -> str:
         string = ""
-        for w in tokens.split():
-            w = w.replace("!", "").replace("?", "").replace(":", "").replace("’", "").replace("…", "").replace(";", "")
-            w = w.replace('"', '').replace("”", "").replace("'", "").replace("*", "").replace("😂", "").replace("“", "")
-            w = w.replace("❤", "").replace("😭", "").replace(",", "")
-            if "." in w:
-                try:
-                    if float(w):
-                        []
-                except:
-                    w = w.replace(".", "")
-            if len(w) > 1 or w.isdigit():
-                string = string + w + " "
+        w = w.replace("!", "").replace("?", "").replace(":", "").replace("’", "").replace("…", "").replace(";", "")
+        w = w.replace('"', '').replace("”", "").replace("'", "").replace("*", "").replace("😂", "").replace("“", "")
+        w = w.replace("❤", "").replace("😭", "").replace(",", "")
+        if "." in w:
+            try:
+                if float(w):
+                    []
+            except:
+                w = w.replace(".", "")
+        if len(w) > 1 or w.isdigit():
+            string = w
 
         return string
 
-    def hyphen_fixer(self, tokens: str) -> str:
+
+    def hyphen_fixer(self, w: str) -> str:
         string = ""
-        dual_string = ""
-        period = ""
-        for w in tokens.split():
-            if "-" in w:
-                # dual_string = w
-                string = string + " " + " ".join(w.split("-")) + " "
-            elif "/" in w:
-                # dual_string = w
-                string = string + " " + " ".join(w.split("/")) + " "
-            elif "&" in w:
-                # dual_string = w
-                string = string + " " + " ".join(w.split("&")) + " "
-            else:
-                string = string + w + " "
+
+        if "-" in w:
+            # dual_string = w
+            string = " ".join(w.split("-")) + " "
+        elif "/" in w:
+            # dual_string = w
+            string = " ".join(w.split("/")) + " "
+        elif "&" in w:
+            # dual_string = w
+            string = " ".join(w.split("&")) + " "
+        else:
+            string = w
         return string
 
 # from parser_module import Parse

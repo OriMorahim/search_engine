@@ -22,7 +22,7 @@ def run_engine():
     # read and parse data
     print("Start read data")
     start = time.time()
-    dfs = r.read_and_concat_all_parquet_in_dir_of_dirs(3)
+    dfs = r.read_and_concat_all_parquet_in_dir_of_dirs(1)
     print(f"Data reading done, time since process start: {(time.time()-start)/60} min")
     p.parse_corpus(dfs)
     print(f"Data parsing done, time since process start: {(time.time()-start)/60} min")
@@ -56,3 +56,16 @@ def main():
     inverted_index = load_index()
     for doc_tuple in search_and_rank_query(query, inverted_index, k):
         print('tweet id: {}, score (TF-IDF): {}'.format(doc_tuple[0], doc_tuple[1]))
+
+def thesaurus(query):
+    string = query
+    count = 0
+    for term in query.split(" "):
+        ans = thes.synonyms(term, fileid="simN.lsp")
+        for word in ans:
+            string = string + " " + word
+            count += 1
+            if count == 7:
+                return string
+
+    return string
