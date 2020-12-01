@@ -5,6 +5,7 @@ from indexer import Indexer
 from searcher import Searcher
 import ranker
 import utils
+import time
 
 
 def run_engine():
@@ -19,13 +20,17 @@ def run_engine():
     p = Parse()
 
     # read and parse data
-    dfs = r.read_and_concat_all_parquet_in_dir_of_dirs(1)
+    print("Start read data")
+    start = time.time()
+    dfs = r.read_and_concat_all_parquet_in_dir_of_dirs(3)
+    print(f"Data reading done, time since process start: {(time.time()-start)/60} min")
     p.parse_corpus(dfs)
+    print(f"Data parsing done, time since process start: {(time.time()-start)/60} min")
 
     # indexing the data
     indexer = Indexer(p.dictionary, p.tweets_words_locations)
     indexer.indexing()
-    print('Finished parsing and indexing. files were exported')
+    print(f"Data indexing done, time since process start: {(time.time()-start)/60}")
 
 
 def load_index():

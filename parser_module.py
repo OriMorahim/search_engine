@@ -1,5 +1,5 @@
 import re
-from document import Document
+import pandas as pd
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from nltk.tokenize import word_tokenize
@@ -63,14 +63,35 @@ class Parse:
         self.tweets_words_locations[tweet_id] = tweet_words_locations
 
 
-    def parse_corpus(self, df):
+    def parse_batch_of_docs(self, df: pd.DataFrame):
         """
+
         :param df:
         :return:
         """
         # parse each tweet and insert result to a document
         for row in df.itertuples():
-            document = self.parse_doc(row)
+            self.parse_doc(row)
+
+
+
+    def parse_corpus(self, dfs: list):
+        """
+        :param df:
+        :return:
+        """
+        # # parse each tweet and insert result to a document
+        # for df in dfs:
+        #     self.parse_batch_of_docs(df)
+        #     print('finish parse batch')
+        #
+        while dfs:
+            df = dfs.pop()
+            print(f"batch size to parse: {df.shape[0]}")
+            self.parse_batch_of_docs(df)
+            print('finish parse batch')
+
+
 
         # fetch words with capital letter
         all_words = set(self.capitals_counter.keys())

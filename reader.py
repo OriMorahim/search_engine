@@ -39,5 +39,5 @@ class ReadFile:
                     break
             if counter >= max_files:
                 break
-        return pd.concat(dfs, axis=0)
+        return dfs #pd.concat(dfs, axis=0)
 
