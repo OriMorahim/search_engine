@@ -7,6 +7,7 @@ from nltk.corpus import lin_thesaurus as thes
 import ranker
 import utils
 import time
+import os
 
 
 def run_engine():
@@ -23,12 +24,17 @@ def run_engine():
     # read and parse data
     print("Start read data")
     start = time.time()
-    dfs = r.read_and_concat_all_parquet_in_dir_of_dirs(10)
+    dfs = r.read_and_concat_all_parquet_in_dir_of_dirs(1)
     print(f"Data reading done, time since process start: {(time.time()-start)/60} min")
     p.parse_corpus(dfs)
     print(f"Data parsing done, time since process start: {(time.time()-start)/60} min")
 
     # indexing the data
+    if not os.path.exists('data'):
+        os.mkdir('data')
+        os.mkdir('data/docs')
+        os.mkdir('data/terms_pointers')
+
     indexer = Indexer(p.dictionary, p.tweets_words_locations)
     indexer.indexing()
     print(f"Data indexing done, time since process start: {(time.time()-start)/60}")
@@ -53,6 +59,9 @@ def search_and_rank_query(query, inverted_index, k):
 def main():
     run_engine()
     query = input("Please enter a query: ")
+    option = input("run a thesaurus? (this will take a much longer time) y / n ")
+    if option == "y" or option == "Y":
+        query = thesaurus(query)
     k = int(input("Please enter number of docs to retrieve: "))
     inverted_index = load_index()
     for doc_tuple in search_and_rank_query(query, inverted_index, k):
