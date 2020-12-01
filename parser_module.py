@@ -107,28 +107,20 @@ class Parse:
             print(f'finish parse batch {time.ctime()}')
 
         # fetch words with capital letter
+        print('tokens seen with capital', len(self.seen_capital))
+        print('total number of tokens seen', len(self.capitals_counter))
         self.words_dual_representation = set([word for word in self.seen_capital if word.lower() in self.capitals_counter.keys()])
         self.words_capital_representation = self.seen_capital-self.words_dual_representation
 
-        # for each word that appear only with capital change the word to be all capital
-        for upper_as_lower in self.seen_capital:
-            if upper_as_lower in self.words_capital_representation:
-                self.capitals_counter[upper_as_lower.upper()] = self.capitals_counter.pop(upper_as_lower)
-            # if the word appear as capital and lower convert the capital to lower and fix Counter
-            else:
-                self.capitals_counter[upper_as_lower.lower()] = self.capitals_counter[upper_as_lower.lower()] + \
-                                                        self.capitals_counter.pop(upper_as_lower)
+        del self.capitals_counter
+        print('capital councapitals_counterter as been deleted')
 
         # change words to all capital
         for capital in self.words_capital_representation: # list of words need to be change appearnce to capital
-            for tweet in self.dictionary[capital]: # set of tweets contain the capital
-                self.tweets_words_locations[tweet][capital.upper()].extend(self.tweets_words_locations[tweet].pop(capital))
             self.dictionary[capital.upper()] = self.dictionary.pop(capital)
 
         # change words to all lower
         for capital in self.words_dual_representation:
-            for tweet in self.dictionary[capital]:
-                self.tweets_words_locations[tweet][capital.lower()].extend(self.tweets_words_locations[tweet].pop(capital))
             self.dictionary[capital.lower()].union(self.dictionary.pop(capital))
 
 

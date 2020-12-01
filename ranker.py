@@ -41,15 +41,18 @@ class Ranker:
             denominator = 0
             max_count = max(doc, key=lambda item: item[1])[1]
             for term in doc:
-                # dfi = 0
-                # for id_, doc_ in documents:
-                #     for do_c in doc_:
-                #         if term[0] in do_c[0]:
-                #             dfi += 1
+                word = term[0].lower()
                 tf = term[1]
+                if word in terms_doc_freq.keys():
+                    df_ = terms_doc_freq[word]
+                elif word.upper() in terms_doc_freq.keys():
+                    df_ = terms_doc_freq[word.upper()]
+                else:
+                    df_=1
+
                 tf = tf / max_count
-                idf = math.log(N/terms_doc_freq[term[0]], 2)
-                if term[0] in query:
+                idf = math.log(N/df_, 2)
+                if word in query:
                     sim = sim + tf * idf
                 denominator = denominator + math.pow(tf*idf, 2)
             if denominator == 0:
