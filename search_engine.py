@@ -24,7 +24,7 @@ def run_engine():
     # read and parse data
     print("Start read data")
     start = time.time()
-    dfs = r.read_and_concat_all_parquet_in_dir_of_dirs(1)
+    dfs = r.read_and_concat_all_parquet_in_dir_of_dirs()
     print(f"Data reading done, time since process start: {(time.time()-start)/60} min")
     p.parse_corpus(dfs)
     print(f"Data parsing done, time since process start: {(time.time()-start)/60} min")

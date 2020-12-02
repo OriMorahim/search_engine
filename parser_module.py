@@ -1,5 +1,6 @@
 import re
 import time
+import pickle
 import pandas as pd
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
@@ -112,6 +113,9 @@ class Parse:
         self.words_dual_representation = set([word for word in self.seen_capital if word.lower() in self.capitals_counter.keys()])
         self.words_capital_representation = self.seen_capital-self.words_dual_representation
 
+        # save words counter as pickle
+        with open('words_counter.pickle', 'wb') as handle:
+            pickle.dump(self.capitals_counter, handle, protocol=pickle.HIGHEST_PROTOCOL)
         del self.capitals_counter
         print('capital councapitals_counterter as been deleted')
 
@@ -193,6 +197,8 @@ class Parse:
         kmb = ""
         number = False
         for w in tokens.split():
+            if w == "RT":
+                continue
             if number:
                 if w == "Thousand":
                     kmb = kmb + "K"
