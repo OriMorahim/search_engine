@@ -45,7 +45,7 @@ class Searcher:
 
             terms_doc_freq = Counter()
             for tweet_id, doc in docs:
-                terms_doc_freq.update([term for term, freq in doc])
+                terms_doc_freq.update([term.lower() for term, freq in doc])
 
             return docs, terms_doc_freq
 

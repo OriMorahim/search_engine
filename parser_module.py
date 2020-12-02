@@ -52,7 +52,7 @@ class Parse:
 
         text_tokens_without_stopwords = []#[w for w in text_tokens if w.lower() not in self.stop_words]
         for w in text_tokens:
-            if w not in self.stop_words:
+            if w.lower() not in self.stop_words:
                 text_tokens_without_stopwords.append(w)
                 if w[0].isupper():
                     self.seen_capital.add(w)
@@ -304,21 +304,4 @@ class Parse:
         else:
             string = w
         return string
-
-# from parser_module import Parse
-# parse_ = Parse()
-# from reader import ReadFile
-# reader_ = ReadFile('C:/Users/orimo/Documents/study_bgu/information_retrival/Data')
-# df = reader_.read_and_concat_all_parquet_in_dir_of_dirs(1)
-# parse_.parse_corpus(df.head(200))
-# from indexer import *
-# ind = Indexer(parse_.dictionary, parse_.tweets_words_locations)
-# ind.indexing()
-
-# import searcher
-# search = searcher.Searcher()
-# docs, idfs = search.relevant_docs_from_posting(['covid'])
-# import ranker
-# rank = ranker.Ranker()
-# rank.tf_idf(docs, idfs, ['covid', 'never'])
 
